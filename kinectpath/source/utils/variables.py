@@ -15,7 +15,7 @@ class Flags:
     """
     def __init__(self):
         self.stop_at_grasp_times = True
-        self.plot_3d_animation = True
+        self.plot_3d_animation = False
         # self. some_other_flag = False
 
 subs = [3773, 3920, 3868, 3823, 3822, 3805, 3941, 3944, 3829, 3947, 3809,
@@ -89,6 +89,7 @@ flagged_trials = {}
 dfTurnPoints = pandas.DataFrame([], index=subs, columns=trialNames)
 
 pathlengths = {}
+num_turns = {}
 
 startPoints = {}
 endPoints = {}

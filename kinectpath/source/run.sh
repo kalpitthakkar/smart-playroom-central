@@ -1,8 +1,8 @@
 #!/bin/bash
 
-python kinectpath.py --use-grasp-times --plot-traj --plot-traj-trial
+python kinectpath.py --use-grasp-times --plot-traj --plot-traj-trial --write-attraction
 
-# --plot-traj --write-attraction
+# --plot-traj --plot-traj-trial
 
 #    --plot-avg-all
 #    --plot-avg-attract

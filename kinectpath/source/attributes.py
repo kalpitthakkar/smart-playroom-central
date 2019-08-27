@@ -3,18 +3,80 @@ import os, glob
 import time
 import platform
 import datetime
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import scipy
 import scipy.signal as scsig
 import numpy as np
 import math
 from matplotlib.backends.backend_pdf import PdfPages
-import matplotlib as mpl
 
 import mpl_toolkits.mplot3d.axes3d as p3
 
 from utils import *
 from utils.misc import reject_outliers
+
+def write_num_turns_ref_near_far(num_turns_filepath='./results/per_trial_num_turns_ref_near_far.csv'):
+    with open(num_turns_filepath, 'w') as f:
+        #f.write("Subject ID, avg(turns for ref), avg(turns for near), avg(turns for far), avg(turns)\n")
+        f.write("Subject ID, trial_name, #turns, ref/near/far\n")
+        for sub in subs:
+            ttype= trial_types[sub] - 1
+            nturns_sub = num_turns[sub]
+            ref = []; near = []; far = []
+            for i, k in enumerate(trialNames[:6]):
+                triplet_name = [triplet_names[ttype][k][x] for x in range(1, 4)]
+                if triplet_name[0] in nturns_sub.keys():
+                    ref_val = nturns_sub[triplet_name[0]]
+                    f.write(",".join([str(sub), str(triplet_name[0]), str(ref_val), "ref"]) + "\n")
+                    ref.append(nturns_sub[triplet_name[0]])
+                if triplet_name[1] in nturns_sub.keys():
+                    near_val = nturns_sub[triplet_name[1]]
+                    f.write(",".join([str(sub), str(triplet_name[1]), str(near_val), "near"]) + "\n")
+                    near.append(nturns_sub[triplet_name[1]])
+                if triplet_name[2] in nturns_sub.keys():
+                    far_val = nturns_sub[triplet_name[2]]
+                    f.write(",".join([str(sub), str(triplet_name[2]), str(far_val), "far"]) + "\n")
+                    far.append(nturns_sub[triplet_name[2]])
+            avg_ref = sum(ref) * 1. / len(ref)
+            avg_near = sum(near) * 1. / len(near)
+            avg_far = sum(far) * 1. / len(far)
+            avg_turns = (sum(ref) + sum(near) + sum(far)) * 1. / (len(ref) + len(near) + len(far))
+            avgs = np.around([avg_ref, avg_near, avg_far, avg_turns], 3)
+            #f.write(",".join([str(sub), str(avgs[0]), str(avgs[1]), str(avgs[2]), str(avgs[3])]) + "\n")
+
+    return
+
+def write_pathlengths_ref_near_far(num_turns_filepath='./results/per_trial_pathlengths_ref_near_far.csv'):
+    with open(num_turns_filepath, 'w') as f:
+        #f.write("Subject ID, avg(turns for ref), avg(turns for near), avg(turns for far), avg(turns)\n")
+        f.write("Subject ID, trial_name, pathlength, ref/near/far\n")
+        for sub in subs:
+            ttype = trial_types[sub] - 1
+            plens_sub = pathlengths[sub]
+            ref = []; near = []; far = []
+            for i, k in enumerate(trialNames[:6]):
+                triplet_name = [triplet_names[ttype][k][x] for x in range(1, 4)]
+                if triplet_name[0] in plens_sub.keys():
+                    ref_val = plens_sub[triplet_name[0]]
+                    f.write(",".join([str(sub), str(triplet_name[0]), str(ref_val), "ref"]) + "\n")
+                    ref.append(plens_sub[triplet_name[0]])
+                if triplet_name[1] in plens_sub.keys():
+                    near_val = plens_sub[triplet_name[1]]
+                    f.write(",".join([str(sub), str(triplet_name[1]), str(near_val), "near"]) + "\n")
+                    near.append(plens_sub[triplet_name[1]])
+                if triplet_name[2] in plens_sub.keys():
+                    far_val = plens_sub[triplet_name[2]]
+                    f.write(",".join([str(sub), str(triplet_name[2]), str(far_val), "far"]) + "\n")
+                    far.append(plens_sub[triplet_name[2]])
+            avg_ref = sum(ref) * 1. / len(ref)
+            avg_near = sum(near) * 1. / len(near)
+            avg_far = sum(far) * 1. / len(far)
+            avg_turns = (sum(ref) + sum(near) + sum(far)) * 1. / (len(ref) + len(near) + len(far))
+            avgs = np.around([avg_ref, avg_near, avg_far, avg_turns], 3)
+            #f.write(",".join([str(sub), str(avgs[0]), str(avgs[1]), str(avgs[2]), str(avgs[3])]) + "\n")
+
+    return
 
 def write_trial_proportions_file(trial_proportions_filepath='./results/trial_proportions.csv'):
     with open(trial_proportions_filepath, 'w') as f:
@@ -52,9 +114,9 @@ def write_triplet_pathlength_file(triplet_pathlength_filepath='./results/triplet
             far_str_to_write = str(ag_far[0]) + ' | ' + str(ag_far[1]) + ' | ' + str(ag_far[2])
             pf.write(str(sub)+','+ref_str_to_write+','+near_str_to_write+','+far_str_to_write+'\n')
 
-def write_attraction_measures_file(attraction_measures_filepath='./results/attraction_metric.csv'):
+def write_attraction_measures_file(attraction_measures_filepath='./results/attraction_metric_dist.csv'):
     with open(attraction_measures_filepath, 'w') as f:
-        f.write("Subject ID, Ref, Near, Near - Ref (Near path: expect +ve), Near - Ref (Ref path: expect +ve)\n")
+        f.write("Subject ID, Ref, Near, Distance of Near from Near - Distance of Near from Ref, Distance of Ref from Near - Distance of Ref from Ref\n")
         for sub in subs:
             for k in trialNames[:6]:
                 if k in attraction_metric[sub].keys():
@@ -305,9 +367,15 @@ def plot_path_trajectories(path_trajs_plotpath='./results/per_subject_path_traje
                         plt.close(fig)
                     '''
                 if triplet_name[0] not in attraction_metric[sub].keys():
-                    val_near = (dist_1 - dist_2) * 1.0 / len(sx)
-                    val_ref = (ref_dist_1 - ref_dist_2) * 1.0 / len(ref_sx)
-                    attraction_metric[sub][triplet_name[0]] = (1.0 / val_near, 1.0 / val_ref)
+                    # Near - Ref
+                    val_near = (dist_2 - dist_1) * 1.0 / len(sx)
+                    val_ref = (ref_dist_2 - ref_dist_1) * 1.0 / len(ref_sx) 
+                    # Ref - Near
+                    #val_near = (dist_1 - dist_2) * 1.0 / len(sx)
+                    #val_ref = (ref_dist_1 - ref_dist_2) * 1.0 / len(ref_sx)
+                    # Old way
+                    #attraction_metric[sub][triplet_name[0]] = (1.0 / val_near, 1.0 / val_ref)
+                    attraction_metric[sub][triplet_name[0]] = (val_near, val_ref)
             for j, pts in enumerate(scatter_st_en):
                 ax.plot(pts[0], pts[1], '*', c=colorDict[k][j], label='')
                 ax.plot(pts[2], pts[3], '^', c=colorDict[k][j], label='')

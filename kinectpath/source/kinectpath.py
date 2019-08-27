@@ -65,6 +65,8 @@ def calculate_attributes(cfg):
         if not os.path.exists(results_dir):
             os.makedirs(results_dir)
 
+    #write_num_turns_ref_near_far()
+    #write_pathlengths_ref_near_far()
     if cfg['write_props']:
         if cfg['props_filepath'] is not None:
             write_trial_proportions_file(cfg['props_filepath'])

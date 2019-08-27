@@ -311,7 +311,7 @@ from variables import trialNames, trial_name_mapper, condition_types, grasp_timi
         grasp_timing_files, sets, objconds, triplet_names, NUM_COLORS, dfTurnPoints, \
         flagged_trials, subs, grasp_timing_subids, dataRoot, skelDataFrames, trialStartEnd, flags, \
         ref_stats, near_stats, far_stats, trial_types, startPoints, endPoints, pathlengths, colorDict, \
-        grasp_timings, grasp_timing_problems
+        grasp_timings, grasp_timing_problems, num_turns
 
 import os
 import matplotlib.pyplot as plt
@@ -703,6 +703,7 @@ def prepare_start_end_points_and_pathlens():
         trStartTimes, trEndTimes = trialStartEnd[sub]['starts'], trialStartEnd[sub]['ends']
         skelDataFrame = skelDataFrames[sub]
         pathlengths[sub] = {}
+        num_turns[sub] = {}
 
         ref = []; near = []; far = []
         for i, k in enumerate(trialNames[:6]):
@@ -829,6 +830,7 @@ def prepare_start_end_points_and_pathlens():
                 #    dist = calc_distance([x1, y1], [x2, y2])
 
                 pathlengths[sub][name] = plen
+                num_turns[sub][name] = len(turnIdx)
                 if j == 0:
                     ref.append(plen)
                 if j == 1:
@@ -838,8 +840,8 @@ def prepare_start_end_points_and_pathlens():
 
                 print "[COMPLETE]"
 
-        with open('subs_data.pkl', 'wb') as f:
-            pickle.dump(subs_data, f)
+        #with open('subs_data.pkl', 'wb') as f:
+        #    pickle.dump(subs_data, f)
         #hf.close()
         #print "[DONE]"
         # Use the calculated path lengths for trial trajectories to store
